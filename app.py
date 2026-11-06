@@ -43,7 +43,8 @@ def fetch_readme(model_id):
     try:
         path = hf_hub_download(repo_id=model_id, filename="README.md")
         with open(path, "r") as f:
-            return f.read()[:4000] 
+            # Reduced to 2000 to save tokens and prevent rate limits
+            return f.read()[:2000] 
     except:
         return None
 
@@ -51,7 +52,8 @@ def generate_llm_text(prompt, model="openai/gpt-oss-20b"):
     chat_completion = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model=model,
-        temperature=0.1
+        temperature=0.1,
+        max_tokens=500  # Capped to prevent Rate Limit Errors
     )
     return chat_completion.choices[0].message.content
 

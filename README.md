@@ -1,4 +1,4 @@
-# P57 Model Card & Datasheet Generator
+# Model Card & Datasheet Generator
 
 ## Project Objective
 This application automatically drafts a Model Card and Datasheet for a given Hugging Face model using an LLM (Groq), checks for missing sections using a BERT-family classifier, and provides a downloadable PDF.

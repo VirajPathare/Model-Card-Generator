@@ -13,7 +13,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Page setup
-st.set_page_config(page_title="P57 Model Card Generator", layout="wide")
+st.set_page_config(page_title="Model Card Generator", layout="wide")
 st.title("P57 Model Card & Datasheet Generator")
 
 # Load API key from Streamlit secrets

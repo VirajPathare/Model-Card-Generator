@@ -1,10 +1,14 @@
 import streamlit as st
-from huggingface_hub import hf_hub_download, InferenceClient
+from huggingface_hub import hf_hub_download
 from transformers import pipeline
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import re
+import requests
+import urllib.parse
+from io import BytesIO
+from PIL import Image
 from groq import Groq
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as ReportLabImage
@@ -19,7 +23,6 @@ st.set_page_config(page_title="Model Card Generator", layout="wide", page_icon="
 # --- SAFE SECRETS RETRIEVAL ---
 try:
     GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-    HF_TOKEN = st.secrets.get("HF_TOKEN", "") # Optional for image API
 except:
     st.error("⚠️ Missing API Key in Streamlit Secrets.")
     st.stop()
@@ -29,7 +32,6 @@ client = Groq(api_key=GROQ_API_KEY)
 # --- CACHED MODELS ---
 @st.cache_resource
 def load_bert_model():
-    # Switched to DistilBERT as requested by evaluator
     return pipeline("zero-shot-classification", model="typeform/distilbert-base-uncased-mnli")
 
 classifier = load_bert_model()
@@ -54,12 +56,10 @@ def generate_llm_text(prompt, model="openai/gpt-oss-20b"):
     return chat_completion.choices[0].message.content
 
 def draft_card_v1_zero_shot(readme_text, license_type):
-    # U1: Prompt Technique 1 (Zero-shot)
     prompt = f"Write a model card for this README. License: {license_type}. README: {readme_text}"
     return generate_llm_text(prompt)
 
 def draft_card_v2_structured(readme_text, license_type):
-    # U1: Prompt Technique 2 (Structured/Few-shot)
     prompt = f"""You are a responsible AI assistant. Draft a model card based on the README.
 Requirements:
 1. Must include these sections exactly: ## Model Details, ## Intended Use, ## Limitations, ## Ethical Considerations.
@@ -71,57 +71,51 @@ Model card draft:"""
     return generate_llm_text(prompt)
 
 def draft_datasheet(readme_text, model_id):
-    # U2: Datasheet Generation
     prompt = f"""You are an AI auditor. Create a Dataset Datasheet for the dataset used to train or evaluate the model {model_id}.
 Based on the README, fill in these sections:
-## Motivation (Why was this dataset created?)
-## Composition (What are the instances? Do they represent specific demographics?)
-## Collection Process (How was data acquired?)
-## Uses (What tasks is it suitable for?)
-## Limitations (What should users not do with it?)
+## Motivation
+## Composition
+## Collection Process
+## Uses
+## Limitations
 If info is missing, write "Not specified in README".
 README: {readme_text}"""
     return generate_llm_text(prompt)
 
 def check_missing_sections(readme_text, target_sections):
-    # U3 Bug Fix: Check the source README, not the generated text. And fix the score lookup.
     missing = []
-    # Limit to first 1500 chars for speed
     text_to_check = readme_text[:1500]
     for section in target_sections:
         res = classifier(text_to_check, candidate_labels=[section, "other"], multi_label=True)
-        # Fix: find the exact index of our section
         idx = res['labels'].index(section)
         score = res['scores'][idx]
-        if score < 0.5: # Adjust threshold as needed
+        if score < 0.5: 
             missing.append(section)
     return missing
 
 def check_hallucinated_metrics(generated_text, readme_text):
-    # U5: Guardrail against ungrounded metrics
-    # Find numbers like "95%", "0.85", "1.5B"
     metrics_in_card = re.findall(r'\b\d+(?:\.\d+)?%?\b', generated_text)
     hallucinations = []
+    clean_readme = readme_text.replace(" ", "").replace("\n", "")
     for metric in metrics_in_card:
-        # Filter out tiny numbers like section headers (e.g., "1.", "2.")
-        if len(metric) > 1 and metric not in readme_text:
+        if len(metric) > 1 and metric not in readme_text and metric not in clean_readme:
             hallucinations.append(metric)
     return list(set(hallucinations))
 
 def generate_image(prompt):
-    # U3/U4: Generative Image via HF API
     try:
-        # Using a fast text-to-image model via Inference API
-        image_client = InferenceClient(model="stabilityai/sd-turbo", token=HF_TOKEN)
-        image = image_client.text_to_image(f"Abstract digital art representing: {prompt[:100]}", width=512, height=512)
+        safe_prompt = urllib.parse.quote(f"Abstract digital art representing AI model: {prompt[:50]}")
+        url = f"https://image.pollinations.ai/prompt/{safe_prompt}?width=512&height=512&nologo=true"
+        response = requests.get(url, timeout=15)
+        img = Image.open(BytesIO(response.content))
         img_path = "cover.png"
-        image.save(img_path)
+        img.save(img_path)
         return img_path
     except Exception as e:
+        print(f"Image error: {e}")
         return None
 
 def generate_audio(text):
-    # U4: Audio Generation
     try:
         tts = gTTS(text=text[:200], lang='en')
         audio_path = "summary.mp3"
@@ -185,7 +179,7 @@ with tab2:
     
     **Probability View:** The zero-shot classifier outputs a softmax probability. We flag a section as "missing" if the probability score is below 0.5.
     
-    **Attention Mechanism:** The LLM reads the README using self-attention. It weighs the importance of every word against every other word to extract context (e.g., noticing the word "limitations" near a bullet point).
+    **Attention Mechanism:** The LLM reads the README using self-attention. It weighs the importance of every word against every other word to extract context.
     """)
 
 with tab3:
@@ -217,25 +211,17 @@ with tab1:
             if not readme:
                 st.error("Failed to read README. Please paste it manually.")
             else:
-                # U1: Generate Zero-shot (for comparison)
                 zs_text = draft_card_v1_zero_shot(readme, license_type)
-                # U1: Generate Structured
                 mc_text = draft_card_v2_structured(readme, license_type)
-                # U2: Generate Datasheet
                 ds_text = draft_datasheet(readme, model_id)
                 
-                # U3: Check missing sections (on README, not output)
                 required_sections = ["Model Details", "Intended Use", "Limitations", "Ethical Considerations", "Training Data", "Evaluation"]
                 missing = check_missing_sections(readme, required_sections)
-                
-                # U5: Guardrail Check
                 hallucinations = check_hallucinated_metrics(mc_text, readme)
                 
-                # U4: Multimodal Generation
                 img_path = generate_image(f"cover for {model_id}")
                 audio_path = generate_audio(mc_text[:200])
                 
-                # Display Results
                 st.success("Generation Complete!")
                 
                 if hallucinations:
@@ -251,7 +237,6 @@ with tab1:
                     st.subheader("Datasheet")
                     st.text_area("", ds_text, height=300)
                 
-                # U1: Prompt Comparison Table
                 st.subheader("Prompt Comparison (U1)")
                 st.table({
                     "Technique": ["Zero-shot", "Structured"],
@@ -259,14 +244,13 @@ with tab1:
                     "Has Sections": ["No", "Yes"]
                 })
                 
-                # U3/U4 Visuals
                 st.subheader("Visuals & Audio")
                 col_img, col_aud, col_chart = st.columns(3)
                 with col_img:
                     if img_path:
                         st.image(img_path, caption="Generated Cover Image")
                     else:
-                        st.info("Image gen failed (Check HF_TOKEN).")
+                        st.info("Image generation failed. Try again in a moment.")
                 with col_aud:
                     if audio_path:
                         st.audio(audio_path)
@@ -274,7 +258,6 @@ with tab1:
                     radar_path = generate_radar(missing, len(required_sections))
                     st.image(radar_path, caption="README Gap Analysis")
                     
-                # PDF Export
                 pdf_filename = f"{model_id.replace('/', '_')}_doc.pdf"
                 export_pdf(mc_text + "\n\n" + ds_text, img_path, pdf_filename)
                 with open(pdf_filename, "rb") as f:

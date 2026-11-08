@@ -6,10 +6,6 @@
 ![Groq](https://img.shields.io/badge/Groq-LLM-orange.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
-> **Project ID:** P57  
-> **Student:** Viraj Eknath Pathare (Roll No: 57, Enrollment: ADT23SOCB1316)  
-> **Course:** Generative AI Mini-Project
-
 ## 🚀 Live Demo
 **Deployed App:** [https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/](https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/)
 

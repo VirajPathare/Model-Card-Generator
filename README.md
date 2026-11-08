@@ -1,34 +1,56 @@
 # 📄 Model Card & Datasheet Generator
 
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B.svg)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Transformers-yellow.svg)
+![Groq](https://img.shields.io/badge/Groq-LLM-orange.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+
+> **Project ID:** P57  
+> **Student:** Viraj Eknath Pathare (Roll No: 57, Enrollment: ADT23SOCB1316)  
+> **Course:** Generative AI Mini-Project
+
+## 🚀 Live Demo
+**Deployed App:** [https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/](https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/)
+
 ## 📖 Project Objective
-This application automatically drafts a Model Card and Dataset Datasheet for a given Hugging Face model. It uses a Large Language Model (via Groq) to read the model's README, a DistilBERT classifier to check for missing documentation sections, and generates a cover image using Stable Diffusion. 
+This application automatically drafts a **Model Card** and **Dataset Datasheet** for a given Hugging Face model. It reads the model's README, uses a Large Language Model (via Groq) to generate the documentation, uses a DistilBERT classifier to check for missing sections, and includes responsible AI guardrails to prevent hallucinated metrics.
 
-**Live Demo:** [https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/](https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/)
+## 🧠 Generative AI Syllabus Coverage (U1–U5)
 
-## 🚀 Key Features (Syllabus Coverage)
-- **Foundations (U1):** Compares Zero-shot vs. Structured prompting techniques.
-- **LLMs & GANs (U2):** Uses the `openai/gpt-oss-20b` model for text generation.
-- **Multimodal (U3):** Uses `typeform/distilbert-base-uncased-mnli` for text classification and `stabilityai/sd-turbo` for image generation.
-- **Tools (U4):** Built with Streamlit, ReportLab (PDF export), and gTTS (Audio summary).
-- **Responsible AI (U5):** Features a regex-based guardrail to catch hallucinated metrics, requires manual license input, and flags missing sections in the source README.
+| Layer | Unit | Implementation in this Project |
+| :--- | :--- | :--- |
+| **I** | **Foundations** | **U1:** Compares Zero-shot vs. Structured prompting techniques. Includes ML Lifecycle positioning. |
+| **II** | **GANs & LLMs** | **U2:** Uses the Groq API (`openai/gpt-oss-20b`) Transformer LLM for core text generation. |
+| **III** | **GPT, BERT & Multimodal** | **U3:** Uses `typeform/distilbert-base-uncased-mnli` for gap analysis. Generates an AI Cover Image (Pollinations AI) and Audio (gTTS). |
+| **IV** | **Tools & Generation** | **U4:** Built with Python & Streamlit. Uses `ReportLab` to export a downloadable PDF and `Matplotlib` for a Radar chart. |
+| **V** | **Responsible AI** | **U5:** Features a Regex-based guardrail to catch hallucinated metrics, flags missing README sections, and provides an ethical License/IP note. |
 
 ## 📊 Results and Evaluation
-We tested the generator on two models. The table below shows the evaluation:
 
-| Model Tested | Prompt Style | Latency | Guardrail Flagged Hallucinations? |
+### Prompt Engineering Comparison (U1)
+| Technique | Output Length | Has Required Sections? |
+| :--- | :--- | :--- |
+| **Zero-shot** | 0 characters | No |
+| **Structured** | 318 characters | Yes |
+
+### Model Testing Results (U5 Guardrail)
+| Model Tested | Guardrail Flagged Hallucinations? | Image Gen | Audio Gen |
 | :--- | :--- | :--- | :--- |
-| `bert-base-uncased` | Structured | ~2.1s | No (Clean generation) |
-| `distilbert-sst2` | Structured | ~2.4s | **Yes** (Flagged numbers like 0.9106) |
+| `bert-base-uncased` | **Yes** (Flagged "110", "768", "12") | Success | Success |
+| `distilbert-sst2` | **Yes** (Flagged "0.9106", "0.9717") | Success | Success |
 
-### ⚠️ Failure Case Documented
-**Scenario:** Gated Models or Empty READMEs
-If the user inputs a gated model (e.g., `meta-llama/Llama-2-7b`), the `hf_hub_download` function fails due to access restrictions. 
-**Mitigation:** The UI handles this gracefully by displaying an error and prompting the user to use the "Paste README manually" input box.
+### ⚠️ Documented Failure Cases
+1. **Groq Rate Limit:** During testing, the app encountered a `429 Too Many Requests` error. *Mitigation:* Added `max_tokens=500` and truncated README input to 2000 chars.
+2. **Gated Models:** The app cannot fetch READMEs for models like Meta's Llama. *Mitigation:* The UI includes a "Paste README manually" text box.
+
+## 📂 Generated Examples
+As per the project deliverables, here are the generated cards for 2 Hugging Face models:
+*   [Example 1: BERT Base Uncased (Markdown)](./examples/card_bert.md)
+*   [Example 2: DistilBERT SST-2 (Markdown)](./examples/card_distilbert.md)
 
 ## 🛠️ Installation (Local)
-1. Clone the repo: `git clone https://github.com/VirajPathare/Model-Card-Generator.git`
-2. Install requirements: `pip install -r requirements.txt`
-3. Set your API keys:
+To run this project locally, follow these steps:
+1. Clone the repository:
    ```bash
-   export GROQ_API_KEY="gsk_..."
-   export HF_TOKEN="hf_..."
+   git clone https://github.com/VirajPathare/Model-Card-Generator.git

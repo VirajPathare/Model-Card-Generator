@@ -1,13 +1,20 @@
+<div align="center">
+
 # 📄 Model Card & Datasheet Generator
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B.svg)
-![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Transformers-yellow.svg)
-![Groq](https://img.shields.io/badge/Groq-LLM-orange.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=for-the-badge&logo=python)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B.svg?style=for-the-badge&logo=streamlit)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Transformers-yellow.svg?style=for-the-badge&logo=huggingface)
+![Groq](https://img.shields.io/badge/Groq-LLM-orange.svg?style=for-the-badge)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
 
-## 🚀 Live Demo
-**Deployed App:** [https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/](https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/)
+**An automated tool to generate Responsible AI documentation for Hugging Face models.**
+
+[🚀 View Live App](https://model-card-generator-fyuxi9ap8wqebavksdd3op.streamlit.app/) • [📂 View Examples](./examples)
+
+</div>
+
+---
 
 ## 📖 Project Objective
 This application automatically drafts a **Model Card** and **Dataset Datasheet** for a given Hugging Face model. It reads the model's README, uses a Large Language Model (via Groq) to generate the documentation, uses a DistilBERT classifier to check for missing sections, and includes responsible AI guardrails to prevent hallucinated metrics.
@@ -42,11 +49,12 @@ This application automatically drafts a **Model Card** and **Dataset Datasheet**
 
 ## 📂 Generated Examples
 As per the project deliverables, here are the generated cards for 2 Hugging Face models:
-*   [Example 1: BERT Base Uncased (Markdown)](./examples/card_bert.md)
-*   [Example 2: DistilBERT SST-2 (Markdown)](./examples/card_distilbert.md)
+*   📄 [Example 1: BERT Base Uncased (Markdown)](./examples/card_bert.md)
+*   📄 [Example 2: DistilBERT SST-2 (Markdown)](./examples/card_distilbert.md)
 
 ## 🛠️ Installation (Local)
 To run this project locally, follow these steps:
-1. Clone the repository:
+
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/VirajPathare/Model-Card-Generator.git
